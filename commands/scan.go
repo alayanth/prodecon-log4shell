@@ -15,24 +15,29 @@
 package commands
 
 import (
+	"errors"
+	"net"
+	"os"
+	"runtime"
+	"time"
+
 	"github.com/lunasec-io/lunasec/tools/log4shell/findings"
 	"github.com/lunasec-io/lunasec/tools/log4shell/scan"
 	"github.com/lunasec-io/lunasec/tools/log4shell/types"
 	"github.com/prometheus/procfs"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
-	"runtime"
 )
 
 func scanSystemProcesses(scanner scan.Log4jVulnerableDependencyScanner) (scannerFindings []types.Finding, err error) {
 	os := runtime.GOOS
-    switch os {
-    case "linux":
-    	break
-    default:
-    	log.Error().Msg("unsupported OS for system process scanning")
-    	return
-    }
+	switch os {
+	case "linux":
+		break
+	default:
+		log.Error().Msg("unsupported OS for system process scanning")
+		return
+	}
 
 	fs, err := procfs.NewFS("/proc")
 	if err != nil {
@@ -105,12 +110,41 @@ func scanDirectoriesForVulnerableLibraries(
 		return scanSystemProcesses(scanner)
 	}
 
+	hostname, error := os.Hostname()
+	if error != nil {
+		log.Info().
+			Str("Error: ", "can't get hostname information").
+			Msg("Host information")
+	}
+	log.Info().
+		Str("Hostname: ", hostname).
+		Msg("Host information")
+
+	// Get IP address
+	ipAddresses, error := LocalIP()
+	log.Info().
+		Str("IP Addresses: ", ipAddresses).
+		Msg("Network information")
+
+	//Register start time for execution
+	startTime := time.Now()
+	log.Info().
+		Str("Start time: ", startTime.Format("2006-01-02 15:04:05")).
+		Msg("Scan information")
+
+	// Register paths
 	log.Info().
 		Strs("searchDirs", searchDirs).
 		Strs("excludeDirs", excludeDirs).
 		Msg("Scanning directories for vulnerable Log4j libraries.")
 
 	scannerFindings = scanner.Scan(searchDirs)
+
+	//Register end time for execution
+	endTime := time.Now()
+	log.Info().
+		Str("Finish time: ", endTime.Format("2006-01-02 15:04:05")).
+		Msg("Scan information")
 	return
 }
 
@@ -130,3 +164,30 @@ func ScanCommand(c *cli.Context, globalBoolFlags map[string]bool, log4jLibraryHa
 	return nil
 }
 
+// LocalIP get the host machine local IP address
+func LocalIP() (string, error) {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return "", err
+	}
+	var ip string
+	for _, i := range ifaces {
+		addrs, err := i.Addrs()
+		if err != nil {
+			return "", err
+		}
+
+		for _, addr := range addrs {
+			switch v := addr.(type) {
+			case *net.IPNet:
+				ip = v.IP.String() + ", " + ip
+			case *net.IPAddr:
+				ip = v.IP.String() + ", " + ip
+			}
+
+		}
+
+	}
+
+	return ip, errors.New("no IP")
+}

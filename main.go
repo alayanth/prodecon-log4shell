@@ -116,14 +116,7 @@ func main() {
 						Usage:       "Bandera para incluir en el escaneo vulnerabilidad para Log4j 1.x.",
 						DefaultText: "false",
 					},
-					&cli.BoolFlag{
-						Name:  "archives",
-						Usage: "Only scan for known vulnerable archives. By default the CLI will scan for class files which are known to be vulnerable which will result in higher signal findings. If you are specifically looking for vulnerable Java archive hashes, use this option.",
-					},
-					&cli.BoolFlag{
-						Name:  "processes",
-						Usage: "Currently only available for Linux systems. Only scan running processes and the files that they have open. This option will greatly improve performance when only running processes are of concern (ex. containers).",
-					},
+
 					&cli.StringFlag{
 						Name:  "version-hashes",
 						Usage: "Ruta al archivo con los hashes de las versiones.",
@@ -138,19 +131,19 @@ func main() {
 					},
 					&cli.BoolFlag{
 						Name:  "ignore-warnings",
-						Usage: "Do not display warnings, only show findings.",
+						Usage: "No muestra las advertencias, sólo muestra los hallazgos.",
 					},
 					&cli.BoolFlag{
 						Name:  "no-follow-symlinks",
-						Usage: "Disable the resolution of symlinks while scanning. Note: symlinks might resolve to files outside of the included directories and so this option might be useful if you strictly want to search in said directories.",
+						Usage: "Deshabilita la resolución de enlaces simbólicos durante el escaneo.",
 					},
 					&cli.BoolFlag{
 						Name:  "json",
-						Usage: "Display findings in json format.",
+						Usage: "Muestra los hallazgos en formato JSON.",
 					},
 					&cli.BoolFlag{
 						Name:  "debug",
-						Usage: "Display helpful information while debugging the CLI.",
+						Usage: "Muestra información útil durante la depuración del CLI.",
 					},
 				},
 				Action: func(c *cli.Context) error {
